@@ -216,33 +216,39 @@ class MilvusClientASOT(metaclass=Singleton):
         
         return res
 
-    def create_and_load_collection(self, collection_name, documents):
+    def create_collection_if_not_exists(self, collection_name: str) -> bool:
         """
-        Create a collection and load it with documents in one operation.
-        
+        Creates a collection if it doesn't already exist.
+
         Args:
-            collection_name (str): Name of the collection
-            documents (list): List of dictionaries with 'id' and 'text' fields
-            
+            collection_name (str): Name of the collection to create.
+
         Returns:
-            dict: Result of the operation
+            bool: True if the collection was created, False if it already existed.
+
+        Raises:
+            MilvusException: If there was an error during collection creation.
         """
         # Check if collection exists
         if self.client.has_collection(collection_name):
-            raise ValueError(f"Collection {collection_name} already exists. Delete it before recreating it.")
+            self.logger.info(f"Collection {collection_name} already exists. Skipping creation.")
+            return False
         
-        # Create schema and indices
-        schema = self.create_schema()
-        index_params = self.create_indices(collection_name)
-        
-        # Create collection
-        self.create_collection(collection_name, schema, index_params)
-        
-        # Insert data
-        prepared_data = self.prepare_data_for_insertion(documents)
-        result = self.insert_data(collection_name, prepared_data)
-        
-        return result
+        try:
+            # Create schema and indices
+            schema = self.create_schema()
+            index_params = self.create_indices(collection_name)
+            
+            # Create collection
+            self.create_collection(collection_name, schema, index_params)
+            self.logger.info(f"Successfully created collection: {collection_name}")
+            return True
+        except MilvusException as e:
+            self.logger.error(f"Failed to create collection {collection_name}: {str(e)}")
+            raise
+        except Exception as e:
+            self.logger.error(f"Unexpected error during collection creation for {collection_name}: {str(e)}")
+            raise
 
     def list_collections(self) -> list:
         """
@@ -450,7 +456,7 @@ class MilvusClientASOT(metaclass=Singleton):
         )[0]
         return results
 
-    def insert_new_episodes(self, collection_name: str, documents: list) -> dict | None:
+    def insert_episodes(self, collection_name: str, documents: list) -> dict | None:
         """
         Inserts documents into the specified collection only if their episode_id 
         is not already present in the collection.

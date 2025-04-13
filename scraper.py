@@ -1,4 +1,4 @@
-from firecrawl import FirecrawlApp
+from firecrawl.firecrawl import FirecrawlApp
 
 import os
 import time
