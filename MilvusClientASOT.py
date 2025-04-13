@@ -296,6 +296,47 @@ class MilvusClientASOT(metaclass=Singleton):
             self.logger.error(f"Error getting collection stats: {str(e)}")
             raise
 
+    def list_episodes(self, collection_name: str) -> list[str]:
+        """
+        Retrieve a list of unique episode IDs present in the collection.
+
+        Args:
+            collection_name (str): The name of the collection to query.
+
+        Returns:
+            list[str]: A sorted list of unique episode IDs found in the collection.
+
+        Raises:
+            ValueError: If the collection does not exist.
+            MilvusException: If there is an error during the query.
+        """
+        if not self.client.has_collection(collection_name):
+            self.logger.error(f"Collection {collection_name} does not exist.")
+            raise ValueError(f"Collection {collection_name} does not exist")
+
+        try:
+            # Query all entities, fetching only the episode_id field.
+            # Assuming 'id' is the primary key and auto_id=True as defined in create_schema
+            results = self.client.query(
+                collection_name=collection_name,
+                filter="id >= 0",
+                output_fields=["episode_id"],
+            )
+
+            # Extract unique episode IDs using a set comprehension and sort them
+            episode_ids = {item['episode_id'] for item in results if 'episode_id' in item}
+            unique_episodes = sorted(list(episode_ids))
+
+            self.logger.debug(f"Found {len(unique_episodes)} unique episodes in collection {collection_name}")
+            return unique_episodes
+
+        except MilvusException as e:
+            self.logger.error(f"Failed to query episode IDs from {collection_name}: {str(e)}")
+            raise
+        except Exception as e:
+            self.logger.error(f"Unexpected error while querying episode IDs: {str(e)}")
+            raise
+
     def delete_collection(self, collection_name):
         """
         Delete a collection from Milvus.
@@ -408,3 +449,62 @@ class MilvusClientASOT(metaclass=Singleton):
             output_fields=["episode_id", "text", "ranking", "artist", "collaborators", "featured_artists", "title", "remix_info", "popularity_score", "vote_count", "URL"]
         )[0]
         return results
+
+    def insert_new_episodes(self, collection_name: str, documents: list) -> dict | None:
+        """
+        Inserts documents into the specified collection only if their episode_id 
+        is not already present in the collection.
+
+        Args:
+            collection_name (str): The name of the collection.
+            documents (list): A list of dictionaries representing the documents to insert. 
+                              Each dictionary must contain an 'episode_id' key.
+
+        Returns:
+            dict | None: The result of the insert operation if any documents were inserted, 
+                         otherwise None. Returns None if no new episodes were found to insert.
+
+        Raises:
+            ValueError: If the collection does not exist or if a document lacks 'episode_id'.
+            MilvusException: If there is an error during listing episodes or insertion.
+        """
+        if not self.client.has_collection(collection_name):
+            self.logger.error(f"Collection {collection_name} does not exist.")
+            raise ValueError(f"Collection {collection_name} does not exist")
+
+        try:
+            existing_episode_ids = set(self.list_episodes(collection_name))
+            self.logger.debug(f"Found {len(existing_episode_ids)} existing episode IDs in {collection_name}.")
+        except Exception as e:
+            self.logger.error(f"Failed to retrieve existing episode IDs: {e}")
+            raise # Re-raise after logging
+
+        documents_to_insert = []
+        skipped_count = 0
+        for doc in documents:
+            episode_id = doc.get('episode_id')
+            if episode_id is None:
+                self.logger.warning(f"Document missing 'episode_id'. Skipping: {doc}")
+                skipped_count += 1
+                continue
+
+            if episode_id not in existing_episode_ids:
+                documents_to_insert.append(doc)
+            else:
+                skipped_count += 1
+
+        if skipped_count > 0:
+             self.logger.info(f"Skipped {skipped_count} documents because their episode_id already exists or was missing.")
+
+        if not documents_to_insert:
+            self.logger.info("No new episodes found to insert.")
+            return None
+
+        try:
+            prepared_data = self.prepare_data_for_insertion(documents_to_insert)
+            insert_result = self.insert_data(collection_name, prepared_data)
+            self.logger.info(f"Successfully inserted {len(documents_to_insert)} new episode documents into {collection_name}.")
+            return insert_result
+        except Exception as e:
+            self.logger.error(f"Failed during data preparation or insertion for new episodes: {e}")
+            raise # Re-raise after logging
