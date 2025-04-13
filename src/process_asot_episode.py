@@ -1,10 +1,14 @@
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 import re
 import json
 import time
 import os
 from typing import List, Dict, Any, Optional, Tuple
-from song_parser import parse_songs_with_claude
-from scraper import scrape_url_with_retry
+from src.song_parser import parse_songs_with_claude
+from src.scraper import scrape_url_with_retry
 
 def process_asot_episode(url: str, output_dir: str = None, max_retries: int = 3, delay: int = 5) -> Tuple[List[Dict[str, Any]], str, str]:
     """

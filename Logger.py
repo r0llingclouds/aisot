@@ -2,7 +2,7 @@ import os
 import logging
 import logging.handlers
 import sys
-from Singleton import Singleton
+from src.Singleton import Singleton
 
 class Logger(metaclass=Singleton):
 

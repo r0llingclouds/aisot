@@ -1,3 +1,7 @@
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from pymilvus import MilvusClient as MC
 from pymilvus import AnnSearchRequest
 from pymilvus import WeightedRanker, MilvusException, RRFRanker
@@ -7,7 +11,7 @@ from pymilvus import DataType
 from pymilvus.model.dense import SentenceTransformerEmbeddingFunction
 
 from Logger import Logger
-from Singleton import Singleton
+from src.Singleton import Singleton
 import json
 
 import os
@@ -177,11 +181,7 @@ class MilvusClientASOT(metaclass=Singleton):
                 "URL": doc.get('URL') if doc.get('URL') is not None else 'nav'
             }
             prepared_data.append(data_point)
-         # dump prepared_data to a json file for debugging
          
-        with open('prepared_data.json', 'w') as f:
-            json.dump(prepared_data, f)
-
         # Generate dense embeddings in batch using the constructed texts
         dense_vectors = self.embeddings(docs_texts_to_embed)
         
