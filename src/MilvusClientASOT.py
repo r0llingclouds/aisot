@@ -10,7 +10,7 @@ from pymilvus import Function, FunctionType
 from pymilvus import DataType
 from pymilvus.model.dense import SentenceTransformerEmbeddingFunction
 
-from Logger import Logger
+from src.Logger import Logger
 from src.Singleton import Singleton
 import json
 
