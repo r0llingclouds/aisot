@@ -1,4 +1,4 @@
-# 🎵 AISOT: A State of Trance Search Engine 🔍
+# 🎵 AISOT: A State of Trance AI-Powered Search Engine 🔍
 
 ![Meronpan Time](/Media/logo.png)
 
@@ -222,3 +222,5 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 This project is licensed under the MIT License - see the LICENSE file for details.
 
 ---
+
+🎵 NON-STOP IN THE MIX 🎵
