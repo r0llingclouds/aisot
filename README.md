@@ -1,4 +1,4 @@
-# 🎵 AISOT: A State of Trance AI-Powered Search Engine 🔍
+# 🎵 AISOT: A State of Trance AI-Powered Search Engine
 
 ![Meronpan Time](/Media/logo.png)
 
