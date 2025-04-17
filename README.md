@@ -1,6 +1,6 @@
 # 🎵 AISOT: A State of Trance AI-Powered Search Engine
 
-![Meronpan Time](/Media/logo.png)
+![Logo](/Media/logo.png)
 
 AISOT is a specialized search engine for exploring tracks played on Armin van Buuren's "A State of Trance" radio show. This project demonstrates the power of modern RAG (Retrieval Augmented Generation) techniques combined with vector databases to create a semantic search experience for music discovery.
 
